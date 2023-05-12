@@ -36,7 +36,10 @@ function _civicrm_api3_contact_info_Revertdata_spec(&$spec) {
  */
 
 /**
- * When we do a revert for a given contact id
+ * Look up the entity specified for the given contact
+ * and retrieve the most recent and second most recent values for that entity
+ * so that the data can be reverted to the second most recent value.
+ * Returns an Object
  */
 function revertOneEntity($entity, $contactID) {
   // Look up the entity's log table.
@@ -49,10 +52,12 @@ function revertOneEntity($entity, $contactID) {
   $secondMostRecentQuery = "SELECT * FROM $entityLogTable WHERE id = $mostRecentEntityID ORDER BY log_date DESC LIMIT 1 OFFSET 1;";
   $params = [];
   $secondMostRecentDAO = CRM_Core_DAO::executeQuery($secondMostRecentQuery, $params);
+  return $secondMostRecentDAO;
 }
 
 /**
- * Helper function to get the logging database
+ * Helper function to get the logging database and table name for the relevant entity.
+ * Returns a String.
  */
 function getLoggingDatabase($entity, $pattern = ['civicrm\_%'], $databaseList = NULL) {
   $dao = new CRM_Core_DAO();
@@ -88,8 +93,12 @@ function getLoggingDatabase($entity, $pattern = ['civicrm\_%'], $databaseList = 
       ];
     }
   }
+  return $dao[''];
 }
 
+/**
+ * APIv3 call to update the value of the entity.
+ */
 function civicrm_api3_contact_info_Revertdata($params) {
   // Always be passing in an array, regardless of how many elements
   // For each entity in that array, call revertOneEntity().
