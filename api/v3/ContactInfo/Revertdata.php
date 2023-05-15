@@ -43,57 +43,60 @@ function _civicrm_api3_contact_info_Revertdata_spec(&$spec) {
  */
 function revertOneEntity($entity, $contactID) {
   // Look up the entity's log table.
-  $entityLogTable = getLoggingDatabase($entity, ['civicrm\_%'], NULL);
-  // Find the most recent entity[email] found for that contact. | Input: contact_id, entity to revert | Output: entity id
-  $mostRecentQuery = "SELECT id FROM $entityLogTable WHERE contact_id = $contactID ORDER BY log_date DESC LIMIT 1;";
-  $mostRecentEntityID = CRM_Core_DAO::singleValueQuery($mostRecentQuery);
-  // Take that entity's id and look up the second most recent address with that id. | Input: entity to revert, entity's id | Output: row with that entity_id
+  $loggingDatabase = getLoggingDatabase();
+  $capitalizedEntity = ucfirst($entity);
+  $table = CRM_Core_DAO_AllCoreTables::getTableForEntityName($capitalizedEntity);
+  $loggingTable = "log_$table";
+  // Find the most recent entity[email] found for that contact. | Input: contact_id, log table in the database | Output: entity id
+  $mostRecentQuery = "SELECT id FROM $loggingDatabase.$loggingTable WHERE contact_id = $contactID ORDER BY log_date DESC LIMIT 1;";
+  $entityID = CRM_Core_DAO::singleValueQuery($mostRecentQuery);
+  // Take that entity's id and look up the second most recent address with that id. | Input: log table in the database, entity's id | Output: row with that entity_id
   // By doing it by the id we can revert the whole row, so it does not have to be entity specific.
-  $secondMostRecentQuery = "SELECT * FROM $entityLogTable WHERE id = $mostRecentEntityID ORDER BY log_date DESC LIMIT 1 OFFSET 1;";
-  $params = [];
-  $secondMostRecentDAO = CRM_Core_DAO::executeQuery($secondMostRecentQuery, $params);
-  return $secondMostRecentDAO;
+  $secondMostRecentQuery = "SELECT * FROM $loggingDatabase.$loggingTable WHERE id = $entityID ORDER BY log_date DESC LIMIT 1 OFFSET 1;";
+  $secondMostRecentDAO = CRM_Core_DAO::executeQuery($secondMostRecentQuery);
+  // Make sure that secondMostRecentDAO exists, and if not then exit (early return).
+  if (!$secondMostRecentDAO) {
+    return;
+  }
+  $revertValues = $$secondMostRecentDAO[''];
+  $liveDatabase = getLiveDatabase();
+  $tableColumnNames = getColumnNames($liveDatabase, $entity);
+  // Update the live database.
+  $updateQuery = "UPDATE $liveDatabase.$table SET $tableColumnNames = $revertValues WHERE id = $entityID";
+  $result = CRM_Core_DAO::singleValueQuery($updateQuery);
+  return $result;
 }
 
 /**
- * Helper function to get the logging database and table name for the relevant entity.
+ * Helper function to get the logging database for the relevant entity.
  * Returns a String.
  */
-function getLoggingDatabase($entity, $pattern = ['civicrm\_%'], $databaseList = NULL) {
+function getLoggingDatabase() {
   $dao = new CRM_Core_DAO();
   $databases = $databaseList ?? [$dao->_database];
 
-  $tableNameLikePatterns = [];
-  $logTableNameLikePatterns = [];
-
-  $pattern = CRM_Utils_Type::escape($pattern, 'String');
-  $entity = CRM_Utils_Type::escape($entity, 'String');
-
-  $tableNameLikePatterns[] = "Name LIKE '{$pattern}\_{$entity}'";
-  $logTableNameLikePatterns[] = "Name LIKE 'log\_{$pattern}\_{$entity}'";
-
-  foreach ($databases as $database) {
-    $dao = CRM_Core_DAO::executeQuery("SHOW TABLE STATUS FROM `{$database}` WHERE Engine = 'InnoDB' AND (" . implode(' OR ', $tableNameLikePatterns) . ")");
-    while ($dao->fetch()) {
-      $tables["`{$database}`.`{$dao->Name}`"] = [
-        'Engine' => $dao->Engine,
-      ];
-    }
-  }
-  // If we specified a list of databases assume the user knows what they are doing.
-  // If they specify the database they should also specify the pattern.
-  if (!$databaseList) {
-    $dsn = defined('CIVICRM_LOGGING_DSN') ? CRM_Utils_SQL::autoSwitchDSN(CIVICRM_LOGGING_DSN) : CRM_Utils_SQL::autoSwitchDSN(CIVICRM_DSN);
+  if ($databases) {
+    $dsn = CRM_Utils_SQL::autoSwitchDSN(CIVICRM_LOGGING_DSN);
     $dsn = DB::parseDSN($dsn);
-    $logging_database = $dsn['database'];
-    $dao = CRM_Core_DAO::executeQuery("SHOW TABLE STATUS FROM `{$logging_database}` WHERE Engine <> 'MyISAM' AND (" . implode(' OR ', $logTableNameLikePatterns) . ")");
-    while ($dao->fetch()) {
-      $tables["`{$logging_database}`.`{$dao->Name}`"] = [
-        'Engine' => $dao->Engine,
-      ];
-    }
+    $loggingDatabase = $dsn['database'];
   }
-  return $dao[''];
+  return $loggingDatabase;
+}
+
+/**
+ * Helper function to get the live databasefor the relevant entity.
+ * Returns a String.
+ */
+function getLiveDatabase() {
+  $dao = new CRM_Core_DAO();
+  $databases = $databaseList ?? [$dao->_database];
+
+  if ($databases) {
+    $dsn = CRM_Utils_SQL::autoSwitchDSN(CIVICRM_DSN);
+    $dsn = DB::parseDSN($dsn);
+    $liveDatabase = $dsn['database'];
+  }
+  return $liveDatabase;
 }
 
 /**
