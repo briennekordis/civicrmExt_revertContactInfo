@@ -42,15 +42,17 @@ function _civicrm_api3_contact_info_Revertdata_spec(&$spec) {
  * Returns an Object
  */
 function revertOneEntity($entity, $contactID) {
-  // Look up the entity's log table.
+  // Look up both the live and logging databases (which may be the same, but in some cases may not) and the entity table.
+  $liveDatabase = getLiveDatabase();
   $loggingDatabase = getLoggingDatabase();
   $capitalizedEntity = ucfirst($entity);
   $table = CRM_Core_DAO_AllCoreTables::getTableForEntityName($capitalizedEntity);
   $loggingTable = "log_$table";
-  // Find the most recent entity[email] found for that contact. | Input: contact_id, log table in the database | Output: entity id
+  
+  // Find the most recent entity[ (i.e. email) found for that contact.
   $mostRecentQuery = "SELECT id FROM $loggingDatabase.$loggingTable WHERE contact_id = $contactID ORDER BY log_date DESC LIMIT 1;";
   $entityID = CRM_Core_DAO::singleValueQuery($mostRecentQuery);
-  // Take that entity's id and look up the second most recent address with that id. | Input: log table in the database, entity's id | Output: row with that entity_id
+  // Take that entity's id and look up the second most recent address with that id.
   // By doing it by the id we can revert the whole row, so it does not have to be entity specific.
   $secondMostRecentQuery = "SELECT * FROM $loggingDatabase.$loggingTable WHERE id = $entityID ORDER BY log_date DESC LIMIT 1 OFFSET 1;";
   $secondMostRecentDAO = CRM_Core_DAO::executeQuery($secondMostRecentQuery);
@@ -58,11 +60,31 @@ function revertOneEntity($entity, $contactID) {
   if (!$secondMostRecentDAO) {
     return;
   }
-  $revertValues = $$secondMostRecentDAO[''];
-  $liveDatabase = getLiveDatabase();
-  $tableColumnNames = getColumnNames($liveDatabase, $entity);
-  // Update the live database.
-  $updateQuery = "UPDATE $liveDatabase.$table SET $tableColumnNames = $revertValues WHERE id = $entityID";
+  while ($secondMostRecentDAO->fetch()) {
+    // Get the fields, which are also the column names in the database, for the entity and format the array so that the name of the column is the key.
+    $entityFields = civicrm_api3($entity, 'getfields');
+    // $entityColumns = array_column($entityFields, 'values');
+    $entityColumns = array_keys($entityFields['values']);
+    $entityColumns = array_flip($entityColumns);
+    // Cast the $secondMostRecentDAO to an array so it is easier to work with.
+    $daoArray = (array) $secondMostRecentDAO;
+    // If a key matches. add that key and the value within the $daoArray to a new array that only contains the key/value pairs we want for the SQL query.
+    $rowValues = array_intersect_key($daoArray, $entityColumns);
+  }
+  if ($rowValues) {
+    // Iterate through the values and format them like a SET statement, i.e. 'columnName = valueToUpdate,'.
+    foreach ($rowValues as $rowKey => $rowValue) {
+      // We don't need to include the id or the contact_id, since those columns will not be updated in this use case. We also don't want to include columns with emtpy values.
+      if (($rowKey !== 'id' || $rowKey !== 'contact_id') && $rowValue) {
+        $setParams[] = "$rowKey = $rowValue";
+      }
+    }
+    // Format the above array into a single string to be passed into the SQL query.
+    $setParamsString = implode(', ', $setParams);
+  }
+
+  // Update the live database, passing in the properly formatted SET parameters and matching the entity's id.
+  $updateQuery = "UPDATE $liveDatabase.$table SET $setParamsString WHERE id = $entityID";
   $result = CRM_Core_DAO::singleValueQuery($updateQuery);
   return $result;
 }
