@@ -75,7 +75,7 @@ function revertOneEntity($entity, $contactID) {
     // Iterate through the values and format them like a SET statement, i.e. 'columnName = valueToUpdate,'.
     foreach ($rowValues as $rowKey => $rowValue) {
       // We don't need to include the id or the contact_id, since those columns will not be updated in this use case. We also don't want to include columns with emtpy values.
-      if (($rowKey !== 'id' || $rowKey !== 'contact_id') && $rowValue) {
+      if (($rowKey !== 'id' && $rowKey !== 'contact_id') && $rowValue) {
         $setParams[] = "$rowKey = $rowValue";
       }
     }
