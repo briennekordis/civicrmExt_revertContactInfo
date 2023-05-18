@@ -77,7 +77,7 @@ function revertOneEntity($entity, $contactID) {
       // We don't need to include the id or the contact_id, since those columns will not be updated in this use case. We also don't want to include columns with emtpy values.
       if (($rowKey !== 'id' && $rowKey !== 'contact_id') && $rowValue) {
         // If the key's type is a string, wrap the value in quotes.
-        if ($entityFields["values"][$rowKey]["type"] === 2) {
+        if ($entityFields['values'][$rowKey]['html']['type'] === 'Text') {
           $rowValue = "'$rowValue'";
         }
         $setParams[] = "$rowKey = $rowValue";
