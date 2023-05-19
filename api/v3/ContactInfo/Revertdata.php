@@ -56,9 +56,11 @@ function revertOneEntity($entity, $contactID) {
   // By doing it by the id we can revert the whole row, so it does not have to be entity specific.
   $secondMostRecentQuery = "SELECT * FROM $loggingDatabase.$loggingTable WHERE id = $entityID ORDER BY log_date DESC LIMIT 1 OFFSET 1;";
   $secondMostRecentDAO = CRM_Core_DAO::executeQuery($secondMostRecentQuery);
-  // Make sure that secondMostRecentDAO exists, and if not then exit (early return).
-  if (!$secondMostRecentDAO) {
-    return;
+  // Make sure that secondMostRecentDAO exists, and if not then exit (early return) with an error message to display to the user.
+  if ($secondMostRecentDAO->N === 0) {
+    $error['errorCode'] = 1;
+    $error['errorMsg'] = "The $entity was not reverted becuase there is no previous value.";
+    return $error;
   }
   while ($secondMostRecentDAO->fetch()) {
     // Get the fields, which are also the column names in the database, for the entity and format the array so that the name of the column is the key.
@@ -89,8 +91,7 @@ function revertOneEntity($entity, $contactID) {
 
   // Update the live database, passing in the properly formatted SET parameters and matching the entity's id.
   $updateQuery = "UPDATE $liveDatabase.$table SET $setParamsString WHERE id = $entityID";
-  $result = CRM_Core_DAO::singleValueQuery($updateQuery);
-  return $result;
+  CRM_Core_DAO::singleValueQuery($updateQuery);
 }
 
 /**
@@ -133,14 +134,10 @@ function civicrm_api3_contact_info_Revertdata($params) {
   // For each entity in that array, call revertOneEntity().
   $params['entity'] = (array) $params['entity'];
   foreach ($params['entity'] as $entity) {
-    revertOneEntity($entity, $params['contact_id']);
+    $revertedEntity = revertOneEntity($entity, $params['contact_id']);
   }
-  if (array_key_exists('contact_id', $params) && array_key_exists('entity', $params)) {
-    $returnValues = [];
-    // Spec: civicrm_api3_create_success($values = 1, $params = [], $entity = NULL, $action = NULL)
-    return civicrm_api3_create_success($returnValues, $params, 'ContactInfo', 'Revertdata');
+  if ($revertedEntity['errorCode']) {
+    return civicrm_api3_create_error($revertedEntity['errorMsg']);
   }
-  else {
-    throw new API_Exception(/*error_message*/ '', /*error_code*/ '');
-  }
+  return civicrm_api3_create_success();
 }
