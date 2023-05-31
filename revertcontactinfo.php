@@ -59,3 +59,9 @@ function revertcontactinfo_civicrm_enable(): void {
 //  ]);
 //  _revertcontactinfo_civix_navigationMenu($menu);
 //}
+
+function revertcontactinfo_civicrm_buildForm($formName, &$form) {
+  if ($formName === 'CRM_Activity_Form_ActivityLinks') {
+    Civi::resources()->addScriptFile('revertcontactinfo', 'js/revert.js');
+  }
+}
