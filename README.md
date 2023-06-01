@@ -1,15 +1,12 @@
 # revertcontactinfo
-
-![Screenshot](/images/screenshot.png)
-
-(*FIXME: In one or two paragraphs, describe what the extension does and why one would download it. *)
+This extension is aimed for backend users within CiviCRM. It allows the user to revert a Contact's email, phone, address, or all three if there is a previous value for those entities within the CiviCRM database.
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
 ## Requirements
 
 * PHP v7.4+
-* CiviCRM (*FIXME: Version number*)
+* CiviCRM 5.60
 
 ## Installation (Web UI)
 
@@ -46,9 +43,13 @@ cv en revertcontactinfo
 ```
 
 ## Getting Started
+1. Once installed, go to a Contact record within the backend of CiviCRM
+2. Click on the **Change Log** tab
+3. This extension provides four buttons; one each to revert a Contact's email, phone, or address and one to revert all three. 
+4. If this Contact has a previous value for one of the above mentioned entities, clicking the respective button will update the Contact's record and replace the current value with the *second most recent* value. A success message will be returned to the user.
+5. If this Contact does not have a previous value for the entity, then the value will not be reverted and the user will receive an error message detailing that inability.
 
-(* FIXME: Where would a new user navigate to get started? What changes would they see? *)
 
-## Known Issues
+## Known Issues (Technical)
 
-(* FIXME *)
+Be aware that the JS file currently relies on using the `innerHTML` method to format the `entity` variable as an array `if (this.innerHTML == 'Revert all')`. 'Revert all' is the name of the fourth button that reverts all three entities. Should the html of this button be changed within the template, the above mentioned coditional within [revert.js](https://github.com/briennekordis/civicrmExt_revertContactInfo/blob/main/js/revert.js) will also need to be updated.
