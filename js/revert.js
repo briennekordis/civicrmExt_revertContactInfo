@@ -4,6 +4,9 @@ CRM.$(function ($) {
     url = document.URL;
     params = new URLSearchParams(url);
     contact_id = params.get('cid');
+    if (this.innerHTML == 'Revert all') {
+      entity = ['email', 'phone', 'address'];
+    }
     executeRevert(entity, contact_id);
   });
 
