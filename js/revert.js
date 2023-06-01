@@ -19,10 +19,10 @@ function executeRevert(entity, contact_id) {
   })
   .done(function (result) {
     if (result.is_error) {
-      alert("Error: this contact's " + entity + " was not reverted.");
+      CRM.alert(result.error_message, "", "error");
     }
     else {
-      alert("Success: this contact's " + entity +" was reverted.");
+      CRM.alert(result.values, "", "success");
     }
   });
 }
