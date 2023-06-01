@@ -58,9 +58,9 @@ function revertOneEntity($entity, $contactID) {
   $secondMostRecentDAO = CRM_Core_DAO::executeQuery($secondMostRecentQuery);
   // Make sure that secondMostRecentDAO exists, and if not then exit (early return) with an error message to display to the user.
   if ($secondMostRecentDAO->N === 0) {
-    $error['errorCode'] = 1;
-    $error['errorMsg'] = "The $entity was not reverted becuase there is no previous value.";
-    return $error;
+    $response['isError'] = TRUE;
+    $response['msg'] = "The $entity was not reverted becuase there is no previous value.";
+    return $response;
   }
   while ($secondMostRecentDAO->fetch()) {
     // Get the fields, which are also the column names in the database, for the entity and format the array so that the name of the column is the key.
@@ -92,6 +92,9 @@ function revertOneEntity($entity, $contactID) {
   // Update the live database, passing in the properly formatted SET parameters and matching the entity's id.
   $updateQuery = "UPDATE $liveDatabase.$table SET $setParamsString WHERE id = $entityID";
   CRM_Core_DAO::singleValueQuery($updateQuery);
+  $response['isError'] = FALSE;
+  $response['msg'] = "The $entity was reverted successfully.";
+  return $response;
 }
 
 /**
@@ -133,11 +136,18 @@ function civicrm_api3_contact_info_Revertdata($params) {
   // Always be passing in an array, regardless of how many elements
   // For each entity in that array, call revertOneEntity().
   $params['entity'] = (array) $params['entity'];
-  foreach ($params['entity'] as $entity) {
-    $revertedEntity = revertOneEntity($entity, $params['contact_id']);
+  $revertedEntity = [];
+  $error = FALSE;
+  $msg = [];
+  foreach ($params['entity'] as $key => $entity) {
+    $revertedEntity[$key] = revertOneEntity($entity, $params['contact_id']);
+    if ($revertedEntity[$key]['isError']) {
+      $error = TRUE;
+    }
+    $msg[] = $revertedEntity[$key]['msg'];
   }
-  if ($revertedEntity['errorCode']) {
-    return civicrm_api3_create_error($revertedEntity['errorMsg']);
+  if ($error) {
+    return civicrm_api3_create_error(implode(' ', $msg));
   }
-  return civicrm_api3_create_success();
+  return civicrm_api3_create_success(implode(' ', $msg));
 }
