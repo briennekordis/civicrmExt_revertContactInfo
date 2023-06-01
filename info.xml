@@ -1,17 +1,17 @@
 <?xml version="1.0"?>
 <extension key="revertcontactinfo" type="module">
   <file>revertcontactinfo</file>
-  <name>revertcontactinfo</name>
-  <description>FIXME</description>
+  <name>Revert Contact Info</name>
+  <description>This extension is aimed for backend users within CiviCRM. It allows the user to revert a Contact's email, phone, address, or all three if there is a previous value for those entities within the CiviCRM database.</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>Brienne Kordis</author>
-    <email>brienne@megaphonetech.com</email>
+    <email></email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">http://FIXME</url>
-    <url desc="Documentation">http://FIXME</url>
-    <url desc="Support">http://FIXME</url>
+    <url desc="Main Extension Page">https://github.com/briennekordis/civicrmExt_revertContactInfo</url>
+    <url desc="Documentation">https://github.com/briennekordis/civicrmExt_revertContactInfo/edit/main/README.md</url>
+    <url desc="Support">https://github.com/briennekordis/civicrmExt_revertContactInfo</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2023-04-26</releaseDate>
@@ -20,7 +20,7 @@
   <compatibility>
     <ver>5.62</ver>
   </compatibility>
-  <comments>This is a new, undeveloped module</comments>
+  <comments>This is a custom extension, built and maintained by Megaphone Technology, LLC.</comments>
   <classloader>
     <psr0 prefix="CRM_" path="."/>
     <psr4 prefix="Civi\" path="Civi"/>
