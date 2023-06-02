@@ -62,6 +62,9 @@ function revertcontactinfo_civicrm_enable(): void {
 
 function revertcontactinfo_civicrm_buildForm($formName, &$form) {
   if ($formName === 'CRM_Activity_Form_ActivityLinks') {
+    CRM_Core_Region::instance('page-footer')->add(
+      ['template' => 'revertdata.tpl'],
+    );
     Civi::resources()->addScriptFile('revertcontactinfo', 'js/revert.js');
   }
 }
