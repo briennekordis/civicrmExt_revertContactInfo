@@ -52,4 +52,4 @@ cv en revertcontactinfo
 
 ## Known Issues (Technical)
 
-Be aware that the JS file currently relies on using the `innerHTML` method to format the `entity` variable as an array `if (this.innerHTML == 'Revert all')`. 'Revert all' is the name of the fourth button that reverts all three entities. Should the html of this button be changed within the template, the above mentioned coditional within [revert.js](https://github.com/briennekordis/civicrmExt_revertContactInfo/blob/main/js/revert.js) will also need to be updated.
+Be aware that the JS file currently relies on using the `innerHTML` method to format the `entity` variable as an array `if (this.innerHTML == 'Revert all three')`. 'Revert all' is the name of the fourth button that reverts all three entities. Should the html of this button be changed within the template, the above mentioned coditional within [revert.js](https://github.com/briennekordis/civicrmExt_revertContactInfo/blob/main/js/revert.js) will also need to be updated.
