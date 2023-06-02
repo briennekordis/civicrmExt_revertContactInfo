@@ -1,4 +1,7 @@
 CRM.$(function ($) {
+   // Position to revert buttons.
+  $('#revertButtons').insertAfter('.crm-contact-tabs-list');
+  // Get the entity to revert from the button clicked.
   $(document).on('click', '.revertOne', function () {
     entity = this.getAttribute('entity');
     url = document.URL;
