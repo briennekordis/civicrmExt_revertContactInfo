@@ -1,6 +1,10 @@
 CRM.$(function ($) {
    // Position to revert buttons.
-  $('#revertButtons').insertAfter('.crm-contact-tabs-list');
+   changeLogTab = document.querySelector('[title="Change Log"]');
+   tabID = changeLogTab.getAttribute('id');
+   ariaLabel = document.querySelector(`div[aria-labelledby=${tabID}]`);
+   changeLogDiv = ariaLabel.getAttribute('id');
+   $(changeLogDiv).prepend($('#revertButtons'));
   // Get the entity to revert from the button clicked.
   $(document).on('click', '.revertOne', function () {
     entity = this.getAttribute('entity');
