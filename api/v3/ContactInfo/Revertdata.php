@@ -101,7 +101,7 @@ function revertOneEntity($entity, $contactID) {
  * Helper function to get the logging database for the relevant entity.
  * Returns a String.
  */
-function getLoggingDatabase() {
+function getLoggingDatabase() : string {
   $dao = new CRM_Core_DAO();
   $databases = $databaseList ?? [$dao->_database];
 
@@ -117,7 +117,7 @@ function getLoggingDatabase() {
  * Helper function to get the live databasefor the relevant entity.
  * Returns a String.
  */
-function getLiveDatabase() {
+function getLiveDatabase() : string {
   $dao = new CRM_Core_DAO();
   $databases = $databaseList ?? [$dao->_database];
 
