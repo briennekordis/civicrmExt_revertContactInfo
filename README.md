@@ -1,4 +1,4 @@
-# revertcontactinfo
+# revertContactInfo
 This extension is aimed for backend users within CiviCRM. It allows the user to revert a Contact's email, phone, address, or all three if there is a previous value for those entities within the CiviCRM database.
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
